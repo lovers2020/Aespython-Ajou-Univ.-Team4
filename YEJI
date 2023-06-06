@@ -1,0 +1,36 @@
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+file1 = "C:/Users/박예지/PycharmProjects/pythonProject4/혼인율.csv"
+file1_marriage = pd.read_csv(file1, encoding="cp949")
+
+file2 = "C:/Users/박예지/PycharmProjects/pythonProject4/기준금리.csv"
+file2_baserate = pd.read_csv(file2, engine="python")
+
+file3 = "C:/Users/박예지/PycharmProjects/pythonProject4/경제활동인구.csv"
+file3_economically = pd.read_csv(file3, encoding="cp949")
+
+file4 = "C:/Users/박예지/PycharmProjects/pythonProject4/소비자물가지수.csv"
+file4_consumer = pd.read_csv(file4, encoding="cp949")
+
+data = pd.concat([file1_marriage,file2_baserate, file3_economically, file4_consumer], axis=1, join='inner')
+
+data = data.loc[:, ~data.columns.duplicated()]
+print(data.head(7))
+print(data.shape)
+
+data.to_csv('mycsv.csv', encoding='utf-8-sig')
+
+plt.rcParams["font.family"] = "Malgun Gothic"
+plt.rc('axes', unicode_minus=False)
+
+correlation = data[['조혼인율(천명당)','기준금리(Rev.1)','고용률 (%)','실업률 (%)','원데이터']].corr()
+sns.heatmap(correlation, annot=True, cmap='coolwarm')
+plt.title("Correlation Matrix")
+plt.show()
+
+sns.pairplot(data=data[['조혼인율(천명당)', '기준금리(Rev.1)', '고용률 (%)', '실업률 (%)', '원데이터']], kind="scatter", diag_kind="kde")
+plt.suptitle("Scatter Plot Matrix")
+plt.show()
