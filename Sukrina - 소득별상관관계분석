@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+
+data1 = pd.read_csv('C:/Users/tjrxo/Downloads/1인당국민총소득 2000~2022.csv', encoding='cp949')
+data2 = pd.read_csv('C:/Users/tjrxo/Downloads/조혼인율.csv', encoding='cp949')
+
+#df1 = pd.concat([data1,data2], join='inner')
+df2 = pd.concat([data1,data2], join='outer')
+df3 = data2[data2["행정구역별(1)"] == '전국']
+
+df4 = pd.concat([data1,df3], keys=['data1','df3'], join='outer')
+df4 = df4.sort_values(by='계정항목별')
+
+# 맨 우측 열 추출
+last_column = df4.pop(df4.columns[-1])
+# 왼쪽 하단에 추가
+df4.insert(0, last_column.name, last_column)
+
+# 데이터 전처리
+df5 = df4.groupby(['1인당 국민총소득(명목, 원화표시) (만원)', '1인당 국민총소득(명목, 달러표시) (달러)', '국내총생산(실질성장률) (%)',
+                '국내총소득 (%)', '국민총소득 (%)', '최종소비지출(실질증감률) (%)', '전국혼인율 (%)']).sum().reset_index()
+
+new_index = df5.index.tolist()
+new_index[5], new_index[6] = new_index[6], new_index[5]
+
+# 인덱스를 재지정하여 행 순서 변경
+df5 = df5.reindex(new_index).set_index('index')
+df5 = df5.drop(columns=['행정구역별(1)', '계정항목별'])
+df5 = df5.T.astype('float')
+
+marriage_corr = df5.corr()
+
+
+# 상관관계 히트맵 표시
+plt.rc('font', family = 'Malgun Gothic')
+plt.figure(figsize=(10, 8))
+sns.heatmap(marriage_corr, cmap='coolwarm', annot=True)
+plt.title('혼인율과의 상관관계')
+plt.xlabel("소득")
+plt.ylabel("소득")
+plt.show()
+
+
+
