@@ -1,3 +1,4 @@
+from tkinter import *
 import requests
 from bs4 import BeautifulSoup
 import numpy as np
@@ -9,14 +10,44 @@ from wordcloud import WordCloud
 import os
 
 os.environ['JAVA_HOME'] = os.path.expanduser('C:\Program Files\Java\jdk-20')
+search = 0
+
+def news_Search():
+
+    window = Tk()
+    window.option_add("*Font", "맑은고딕 10")
+
+    img = PhotoImage(file='heart2.png')
+    img_label = Label(window, image=img, bg='pink')
+    img_label.grid(column=0, row=0)
+
+    title_label = Label(window, text='뉴스 키워드 검색기', bg="red", font=('나눔바른펜', 18, 'bold'))
+    title_label.grid(column=0, row=0)
+
+    entry = Entry(window, width=30)
+    entry.grid(column=0, row=1, pady=15)
+
+    def close():
+        global search
+        search = entry.get()
+
+        window.destroy()
+
+    btn = Button(window, text='검색하기', width=10, bg="pink", command=close)
+    btn.grid(column=0, row=2, pady=5)
+
+    window.mainloop()
+
+    return search
 
 # 네이버에 혼인율 검색 후 10 페이지까지 뉴스 제목 스크래핑
 def get_Keyword_Analisys():
 
     list = []
+    keyword = news_Search()
 
     for i in range(1, 100, 10):
-        response = requests.get(f"https://search.naver.com/search.naver?where=news&sm=tab_jum&query=혼인율&start={i}")
+        response = requests.get(f"https://search.naver.com/search.naver?where=news&sm=tab_jum&query={keyword}&start={i}")
         soup = BeautifulSoup(response.text,'html.parser')
 
         links = soup.select('.news_tit')
@@ -28,17 +59,17 @@ def get_Keyword_Analisys():
 
     # 스크래핑 한 내용 csv 파일로 저장
     # 처음에는 아래 내용 주석 풀고 Run 하기~
-    # f = open('혼인율_Newslist.txt','w',encoding='utf-8' ,newline='')
-    # list = str(list)
-    #
-    # for i in list:
-    #     f.write(i)
-    #     if i ==']':
-    #         f.write('\n')
-    # f.close()
+    f = open(f'{keyword}_Newslist.txt','w',encoding='utf-8' ,newline='')
+    list = str(list)
+
+    for i in list:
+        f.write(i)
+        if i ==']':
+            f.write('\n')
+    f.close()
 
     #키워드 분석 시작
-    with open('혼인율_Newslist.txt', 'r', encoding='utf-8') as d:
+    with open(f'{keyword}_Newslist.txt', 'r', encoding='utf-8') as d:
         text = d.read()
 
     okt = Okt()
@@ -61,7 +92,7 @@ def get_Keyword_Analisys():
 
      # 키워드 분석 시각화
     mask = Image.new("RGBA",(2500,2200),(255,255,255))
-    image = Image.open('C:/Users/Lovers2019/PycharmProjects/pythonProject/heart.png').convert('RGBA')
+    image = Image.open('heart.png').convert('RGBA')
     x,y = image.size
     mask.paste(image,(0,0,x,y),image)
     mask = np.array(mask)
