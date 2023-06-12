@@ -1,20 +1,15 @@
 import Keyword_Analisys as ka
 import pandas as pd
 import numpy as np
-import folium
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.linear_model import LinearRegression
-import statsmodels.api as sm
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
-import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
 
-'''
 # 키워드 분석
 ka.get_Keyword_Analisys()
-'''
+
+print('키워드 분석 완료..')
 
 plt.rc('font', family='Malgun Gothic')
 plt.rcParams['axes.unicode_minus'] = False
@@ -117,9 +112,10 @@ base_rate = base_rate.set_index('단위')
 base_rate = base_rate.rename(index={'연%': '기준금리'})
 
 ########################### 데이터 합치고 상관계수 구하기 ########################
-#기준금리 파일은 출처 한국은행 나머지는 통계청
+
 #혼인율, 출산율, 주택매매가격, 주택전세가격, 가구구성원, 국민총소득, 주택보급률, 취업/실업률, 물가지수, 기준금리
 # 청년실업자 및 청년실업률 연령 기준 : 15~29세
+
 df = pd.concat([nuptiality, birthrate, apart_trade, apart_lease, houseMember_rate, income,house_supply, job_rate, price_rate, base_rate], join='outer').reset_index()
 df = df.rename(columns={'index': ' '}).set_index(' ')
 
@@ -133,7 +129,12 @@ df['4인가구'] = df['4인가구'].fillna(method='ffill')
 df['5인가구'] = df['5인가구'].fillna(method='ffill')
 df['6인이상가구'] = df['6인이상가구'].fillna(method= 'ffill')
 
-corr = df.corr(method='pearson')
+# 조혼인율을 제외하고 상관관계 뽑기
+df_2 = df
+df_2 = df_2.drop('조혼인율',axis=1)
+corr = df_2.corr(method='pearson')
+df_2 = df
+
 '''
 ###################################### 석태형 코드 ###############################
 '''
@@ -193,100 +194,88 @@ SY = SY.drop(0).reset_index(drop=True)
 
 # 정권별 혼인율 그래프
 
-# TW.iloc[:, 1:6] = TW.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# YS.iloc[:, 1:6] = YS.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# DJ.iloc[:, 1:6] = DJ.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# MH.iloc[:, 1:6] = MH.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# MB.iloc[:, 1:6] = MB.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# GH.iloc[:, 1:6] = GH.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# KA.iloc[:, 1:6] = KA.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# MUN.iloc[:, 1:6] = MUN.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-# SY.iloc[:, 1:6] = SY.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
-#
-# # 그래프
-# plt.figure(figsize=(14,8))
-#
-# plt.plot(TW['행정구역별(1)'], TW.iloc[:, 1:6].sum(axis=1), label='TW')
-# plt.plot(YS['행정구역별(1)'], YS.iloc[:, 1:6].sum(axis=1), label='YS')
-# plt.plot(DJ['행정구역별(1)'], DJ.iloc[:, 1:6].sum(axis=1), label='DJ')
-# plt.plot(MH['행정구역별(1)'], MH.iloc[:, 1:6].sum(axis=1), label='MH')
-# plt.plot(MB['행정구역별(1)'], MB.iloc[:, 1:6].sum(axis=1), label='MB')
-# plt.plot(GH['행정구역별(1)'], GH.iloc[:, 1:6].sum(axis=1), label='GH')
-# plt.plot(KA['행정구역별(1)'], KA.iloc[:, 1:6].sum(axis=1), label='KA')
-# plt.plot(MUN['행정구역별(1)'], MUN.iloc[:, 1:6].sum(axis=1), label='MUN')
-# plt.plot(SY['행정구역별(1)'], SY.iloc[:, 1:6].sum(axis=1), label='SY')
-#
-# plt.xlabel('임기&지역')
-# plt.ylabel('혼인건수',rotation= 0)
-# plt.yticks(rotation= 0)
-# plt.xticks(rotation= -20)
-# plt.title('대통령 별 혼인건수 추이',fontsize= 20)
-# plt.legend()
-#
-# # 상관관계 히트맵
-# plt.figure(figsize=(21,12))
-# plt.title('Correlation Matrix',fontsize= 20)
-# heatmap = sns.heatmap(corr,annot=True,linewidths=0.01,linecolor='skyblue',cbar=False,cmap='RdYlBu') #cmap='RdYlBu'
-# plt.yticks(rotation= 0)
-# plt.xticks(rotation= -20)
-#
-# list = list(df.columns)
-#
-# list_2 = ['조혼인율', '합계출산율', '전국매매가격', '전국전세가격', '평균가구원수', '1인가구', '2인가구']
-# list_3 = ['조혼인율','1인당 국민총소득', '국내 총생산', '국내 총소득', '국민 총소득', '최종소비지출', '주택보급률']
-# list_4 = ['조혼인율','실업률', '청년실업률', '취업률', '물가 상승률', '기준금리']
-#
-# # 산점도
-# sns.pairplot(data=df[list_2], kind="scatter", diag_kind="kde")
-# sns.pairplot(data=df[list_3], kind="scatter", diag_kind="kde")
-# sns.pairplot(data=df[list_4], kind="scatter", diag_kind="kde")
+TW.iloc[:, 1:6] = TW.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+YS.iloc[:, 1:6] = YS.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+DJ.iloc[:, 1:6] = DJ.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+MH.iloc[:, 1:6] = MH.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+MB.iloc[:, 1:6] = MB.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+GH.iloc[:, 1:6] = GH.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+KA.iloc[:, 1:6] = KA.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+MUN.iloc[:, 1:6] = MUN.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
+SY.iloc[:, 1:6] = SY.iloc[:, 1:6].apply(pd.to_numeric, errors='coerce')
 
-# plt.show()
+# 그래프
+plt.figure(figsize=(14,8))
+
+plt.plot(TW['행정구역별(1)'], TW.iloc[:, 1:6].sum(axis=1), label='TW')
+plt.plot(YS['행정구역별(1)'], YS.iloc[:, 1:6].sum(axis=1), label='YS')
+plt.plot(DJ['행정구역별(1)'], DJ.iloc[:, 1:6].sum(axis=1), label='DJ')
+plt.plot(MH['행정구역별(1)'], MH.iloc[:, 1:6].sum(axis=1), label='MH')
+plt.plot(MB['행정구역별(1)'], MB.iloc[:, 1:6].sum(axis=1), label='MB')
+plt.plot(GH['행정구역별(1)'], GH.iloc[:, 1:6].sum(axis=1), label='GH')
+plt.plot(KA['행정구역별(1)'], KA.iloc[:, 1:6].sum(axis=1), label='KA')
+plt.plot(MUN['행정구역별(1)'], MUN.iloc[:, 1:6].sum(axis=1), label='MUN')
+plt.plot(SY['행정구역별(1)'], SY.iloc[:, 1:6].sum(axis=1), label='SY')
+
+plt.xlabel('임기&지역')
+plt.ylabel('혼인건수',rotation= 0)
+plt.yticks(rotation= 0)
+plt.xticks(rotation= -20)
+plt.title('대통령 별 혼인건수 추이',fontsize= 20)
+plt.legend()
+
+# 상관관계 히트맵
+plt.figure(figsize=(21,12))
+plt.title('Correlation Matrix',fontsize= 20)
+heatmap = sns.heatmap(corr,annot=True,linewidths=0.01,linecolor='skyblue',cbar=False,cmap='RdYlBu') #cmap='RdYlBu'
+plt.yticks(rotation= 0)
+plt.xticks(rotation= -20)
+
+
+list = ['3인가구','4인가구','5인가구','6인이상가구']
+list_2 = ['합계출산율', '전국매매가격', '전국전세가격', '평균가구원수', '1인가구', '2인가구']
+list_3 = ['1인당 국민총소득', '국내 총생산', '국내 총소득', '국민 총소득', '최종소비지출', '주택보급률']
+list_4 = ['실업률', '청년실업률', '취업률', '물가 상승률', '기준금리']
+
+# 산점도
+sns.pairplot(data=df[list], kind="scatter", diag_kind="kde")
+sns.pairplot(data=df[list_2], kind="scatter", diag_kind="kde")
+sns.pairplot(data=df[list_3], kind="scatter", diag_kind="kde")
+sns.pairplot(data=df[list_4], kind="scatter", diag_kind="kde")
+
+# 필요 없는 변수 제거
+df = df.drop(['2인가구','3인가구','4인가구','5인가구','6인이상가구','1인당 국민총소득','국내 총생산','국내 총소득','최종소비지출','주택보급률','실업률','취업률','물가 상승률','기준금리'],axis=1)
+df2 = df
+
+df2 = df2.drop('조혼인율',axis=1)
+corr2 = df2.corr()
+
+#### 변수 줄인 후 히트맵 ########
+
+plt.figure(figsize=(10,8))
+plt.title('Reduce Variable Correlation Matrix',fontsize= 20)
+heatmap = sns.heatmap(corr2,annot=True,linewidths=0.01,linecolor='skyblue',cbar=False) #cmap='RdYlBu'
+plt.yticks(rotation= 0)
+plt.show()
 
 ######################### 회귀 분석 ###################
+# 혼인율,합계출산율,평균가구원수,1인가구,국민 총소득, 청년실업률
 
-x = df.drop(['조혼인율'], axis= 1, inplace= False).values
+df = df.rename(columns={'1인가구': 'OnePeople'})
+df.columns = df.columns.str.replace(' ','')
 
-y = df.조혼인율.values
+# 이원분산 (Two-Way ANOVA) 분석,,,,,,, 여러 가지 변수 평가 결과 아래 2개 변수만 의미있는 p값 도출
 
-# print(x)
+model2 = ols("조혼인율 ~ 합계출산율 + 평균가구원수 + OnePeople + 국민총소득 + 청년실업률",data=df).fit()
+# print(anova_lm(model2,typ=2),'\n')
 
-result = sm.OLS(y,x).fit().summary()
-# print(result)
+# print(anova_lm(ols("조혼인율 ~ 합계출산율 + 평균가구원수 + OnePeople + 국민총소득",data=df,).fit(),typ=2),'\n')
+# print(anova_lm(ols("조혼인율 ~ 합계출산율 + 평균가구원수 + OnePeople",data=df).fit()),'\n')
+# print(anova_lm(ols("조혼인율 ~ 합계출산율 + 평균가구원수 ",data=df).fit(),typ=2),'\n')
+# print(anova_lm(ols("조혼인율 ~ 합계출산율 + OnePeople",data=df).fit(),typ=2),'\n')
+# print(model.summary())
 
-lr = LinearRegression()
+print('--------회귀분석 결과----------')
 
-# print(x,y)
-
-# x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.3, random_state=0)
-list = list(df.columns)
-
-
-# model = sm.OLS.from_formula("조혼인율 ~ 합계출산율 + 전국매매가격 + 전국전세가격 + 평균가구원수",data=df)
-# model2 = sm.OLS.from_formula("조혼인율 ~  1인가구 + 2인가구 + 3인가구 + 4인가구 + 5인가구 + 6인이상가구 + 1인당 국민총소득 + 국내 총생산 + 국내 총소득 + 국민 총소득 + 최종소비지출 + 주택보급률 + 실업률 + 청년실업률 + 취업률 + 물가 상승률 + 기준금리",data=df)
-# result2 = model2.fit().summaty()
-# result = model.fit().summary()
-# print(result)
-# print(result2)
-
-#
-# y_predict = lr.predict(x_test)
-# mse = mean_squared_error(y_test,y_predict)
-# rmse = np.sqrt(mse)
-#
-# print('MSE : {0:.3f}, RMSE : {1:.3f}'.format(mse, rmse))
-# print('R^2(Variance score) : {0:.3f}'.format(r2_score(y_test, y_predict)))
-#
-# print('회귀 계수 값: ',np.round(lr.coef_, 2))
-#
-# coef = pd.Series(data= np.round(lr.coef_,2), index=x.columns)
-# coef.sort_values(ascending=False)
-# # print(coef)
-#
-# x_train2 = sm.add_constant(x_train)
-# model = sm.OLS(y_train,x_train2)
-# result = model.fit().summary()
-# print(result)
-
-
-
+print(anova_lm(ols("조혼인율 ~ 합계출산율 + 평균가구원수 ",data=df).fit(),typ=2),'\n')
+print(anova_lm(ols("조혼인율 ~ 합계출산율 + OnePeople",data=df).fit(),typ=2),'\n')
