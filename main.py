@@ -60,7 +60,7 @@ apart_lease = apart_lease.set_index(pd.Index(['전국전세가격']))
 # 가구구성원 파일# 필요없는 행 삭제
 houseMember_rate = houseMember_rate.drop(labels=range(7, 10))
 
-# 열 이름 변경 / index를 년도로 변경p
+# 열 이름 변경 / index를 년도로 변경
 houseMember_rate = houseMember_rate.drop('Unnamed: 0', axis=1)
 houseMember_rate = houseMember_rate.rename(columns={'Unnamed: 1': '년도'})
 houseMember_rate['년도'] = houseMember_rate['년도'].fillna('평균가구원수')
@@ -89,7 +89,7 @@ job_rate = job_rate.astype(float)
 economic_pop = economic_pop.drop(0, axis=0).rename(columns={'성별': '계'}).set_index('계').rename({'계': '경제활동인구'}, axis=0)
 economic_pop = economic_pop.astype(int)
 
-
+# 취업률 구하기
 df2 = (job_rate.iloc[0]*10000) / (economic_pop.iloc[0] * 1000) * 100
 df2 = pd.DataFrame(df2).transpose()
 df2.iloc[0] = round(df2.iloc[0], 2)
@@ -134,10 +134,6 @@ df_2 = df
 df_2 = df_2.drop('조혼인율',axis=1)
 corr = df_2.corr(method='pearson')
 df_2 = df
-
-'''
-###################################### 석태형 코드 ###############################
-'''
 
 # 정권별 분석
 data = pd.read_csv('혼인율 1988~2023.csv', encoding='cp949')
@@ -225,7 +221,7 @@ plt.title('대통령 별 혼인건수 추이',fontsize= 20)
 plt.legend()
 
 # 상관관계 히트맵
-plt.figure(figsize=(21,12))
+plt.figure(figsize=(19,12))
 plt.title('Correlation Matrix',fontsize= 20)
 heatmap = sns.heatmap(corr,annot=True,linewidths=0.01,linecolor='skyblue',cbar=False,cmap='RdYlBu') #cmap='RdYlBu'
 plt.yticks(rotation= 0)
@@ -256,7 +252,7 @@ plt.figure(figsize=(10,8))
 plt.title('Reduce Variable Correlation Matrix',fontsize= 20)
 heatmap = sns.heatmap(corr2,annot=True,linewidths=0.01,linecolor='skyblue',cbar=False) #cmap='RdYlBu'
 plt.yticks(rotation= 0)
-plt.show()
+
 
 ######################### 회귀 분석 ###################
 # 혼인율,합계출산율,평균가구원수,1인가구,국민 총소득, 청년실업률
@@ -264,7 +260,7 @@ plt.show()
 df = df.rename(columns={'1인가구': 'OnePeople'})
 df.columns = df.columns.str.replace(' ','')
 
-# 이원분산 (Two-Way ANOVA) 분석,,,,,,, 여러 가지 변수 평가 결과 아래 2개 변수만 의미있는 p값 도출
+# ANOVA 분석,,,,,,, 여러 가지 변수 평가 결과 아래 2개 변수만 의미있는 p값 도출
 
 model2 = ols("조혼인율 ~ 합계출산율 + 평균가구원수 + OnePeople + 국민총소득 + 청년실업률",data=df).fit()
 # print(anova_lm(model2,typ=2),'\n')
@@ -276,6 +272,38 @@ model2 = ols("조혼인율 ~ 합계출산율 + 평균가구원수 + OnePeople + 
 # print(model.summary())
 
 print('--------회귀분석 결과----------')
-
-print(anova_lm(ols("조혼인율 ~ 합계출산율 + 평균가구원수 ",data=df).fit(),typ=2),'\n')
 print(anova_lm(ols("조혼인율 ~ 합계출산율 + OnePeople",data=df).fit(),typ=2),'\n')
+
+
+#$$$$$$$$$$$ 그래프 그리기(PPT용)$$$$$$$$$$$$$
+year = [str(i) for i in range(2000,2023)]
+plt.figure(figsize=(12,8))
+plt.title('혼인율 감소와 관련이 있는 항목',fontsize=15)
+plt.xlabel('년도')
+
+ax = plt.subplot(111)
+ax.spines['left'].set_visible(False)
+ax.spines['top'].set_visible(False)
+
+ax.xaxis.set_ticks_position('bottom')
+ax.yaxis.set_ticks_position('right')
+
+ax.patch.set_facecolor('white')
+ax.patch.set_alpha(0.2)
+ax.grid(False)
+
+plt.plot(year,df['조혼인율'],'--',color='red',label= '혼인율')
+plt.fill_between(year,df['조혼인율'],alpha=0.3, linewidth=0, edgecolor='red',facecolor='red',antialiased=True)
+
+plt.plot(year,df['합계출산율'],'--',c='firebrick',label= '출산율')
+plt.fill_between(year,df['합계출산율'],alpha=0.3, linewidth=0, edgecolor='firebrick',facecolor='green')
+
+plt.plot(year,df['OnePeople']/4,'--',c='darkblue', label= '1인 가구 수')
+plt.fill_between(year,df['OnePeople']/4,alpha=0.3, linewidth=0, edgecolor='darkblue',facecolor='blue')
+
+ax.legend(loc='upper left', frameon=False, fontsize= 12) # frameon : 테두리 출력 여부
+plt.margins(x=0,y=0)
+plt.ylim(0,10)
+plt.yticks(np.arange(0,11,1))
+plt.show()
+

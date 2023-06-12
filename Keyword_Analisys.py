@@ -78,7 +78,7 @@ def get_Keyword_Analisys():
     words = []
     # 형용사와 명사만 리스트에 넣어주기
     for i, j in output:
-        if j in['Noun','Adjective']:
+        if j in['Noun', 'Adjective']:
             words.append(i)
 
     #제외 할 단어 추가
@@ -91,17 +91,18 @@ def get_Keyword_Analisys():
     count = count.most_common(100)
 
      # 키워드 분석 시각화
-    mask = Image.new("RGBA",(2500,2200),(255,255,255))
+    mask = Image.new("RGBA",(2500, 2200), (255, 255, 255))
     image = Image.open('heart.png').convert('RGBA')
-    x,y = image.size
-    mask.paste(image,(0,0,x,y),image)
+    x, y = image.size
+    mask.paste(image, (0, 0, x, y), image)
     mask = np.array(mask)
 
     # # 폰트 지정
     font = 'C:/Windows/Fonts/맑은고딕/malgun.ttf'
-    word_cloud = WordCloud(font_path=font, background_color='black',max_font_size=400,mask=mask, colormap='prism').generate_from_frequencies(dict(count))
-    plt.figure(figsize=(10,8))
+    word_cloud = WordCloud(font_path=font, background_color='black', max_font_size=400, mask=mask, colormap='prism').generate_from_frequencies(dict(count))
+    plt.figure(figsize=(10, 8))
     plt.imshow(word_cloud)
     plt.axis('off')
     plt.savefig('혼인율.png',bbox_inches='tight')
-    plt.show()
+    # plt.show()
+
